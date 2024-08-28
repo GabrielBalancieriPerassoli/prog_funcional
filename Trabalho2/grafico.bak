@@ -1,0 +1,350 @@
+#lang racket
+
+(require examples)
+
+;; --------------------------------------
+;; Disciplina: Programação Funcional
+;; Professor: Marco Aurélio Lopes Barbosa
+;; --------------------------------------
+
+;; =============================================
+;; Nome: Gabriel Balancieri Perassoli RA: 135854
+;; =============================================
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(struct sorvete (tipo quantidade) #:transparent)
+;; Sorvete representa um tipo de sorvete e sua quantidade
+;; tipo : String - qual é o sabor de sorvete
+;; quantidade : Número - a quantidade de sorvetes daquele sabor
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Análise
+;; Determinar um separador de linhas, separando as linhas em duas colunas, tipo e quantidade,
+;; recursivamente processando todas as linhas da tabela separando-as em duas partes e covertendo para a estrutura sorvete.
+;;
+;; Tipo de Dados
+;; Linhas da tabela é a entrada
+;; - Lista de instâncias da estrutura sorvete é a saída esperada
+;;
+;; Especificação
+;; List<String> -> List<Sorvete>
+;; Processa uma lista de strings da tabela, onde cada string contém um tipo e uma quantidade de sorvete,
+;; e retorna uma lista de instâncias da estrutura sorvete.
+
+(define (processa-entrada linhas)
+  (cond
+    [(empty? linhas) empty]
+    [else 
+     (define partes (string-split (first linhas)))
+     (cons (sorvete (first partes) (string->number (second partes)))
+           (processa-entrada (rest linhas)))]))
+
+;; Exemplos de uso
+(examples
+  (check-equal? (processa-entrada '("Uva 43" "Chocolate 15" "Morango 25"))(list (sorvete "Uva" 43) (sorvete "Chocolate" 15) (sorvete "Morango" 25)))
+  (check-equal? (processa-entrada '("Baunilha 10" "Menta 5")) (list (sorvete "Baunilha" 10) (sorvete "Menta" 5)))
+  (check-equal? (processa-entrada '("Amora 7")) (list (sorvete "Amora" 7)))
+  (check-equal? (processa-entrada empty) empty))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Análise
+;; Determinar a soma total de todos os elementos da coluna sorvete-quantidade da tabela.
+;;
+;; Tipo de Dados
+;; Tabela é o resultado da função processa-entrada, logo tabela é a entrada
+;; - total soma quantidades é a saída esperada
+;;
+;; Especificação
+;; List<Sorvete> -> NúmeroNatural
+;; Determina a soma total de todas as quantidades de sorvetes estrutura, tabela é um List<Sorvete> do tipo struct, logo sorvete-quantidade
+;; são as quantidades de cada tipo de sorvete.
+
+(define (total-sorvetes tabela)
+  (cond
+    [(empty? tabela) 0]
+    [else (+ (sorvete-quantidade (first tabela))
+             (total-sorvetes (rest tabela)))]))
+
+;; Exemplos de uso
+(examples
+  (check-equal? (total-sorvetes empty) 0)
+  (check-equal? (total-sorvetes (list (sorvete "Baunilha" 10))) 10)
+  (check-equal? (total-sorvetes (list (sorvete "Baunilha" 10) (sorvete "Menta" 25))) 35)
+  (check-equal? (total-sorvetes (list (sorvete "Baunilha" 0) (sorvete "Menta" 100))) 100))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Análise
+;; Determinar a porcentagem de um único sorvete.
+
+;; Tipo de Dados
+;; Sorvete é a estrutura de entrada para obter a quantidade
+;; Total é o valor da soma total de todas as quantidades de sorvetes da estrutura
+
+;; Especificação
+;; List<Sorvete> NúmeroNatural -> Número
+;; Determina a porcentagem de um único sorvete, dada a estrutura sorvete-quantidade e o total, podemos calcular a porcentagem de um único sorvete. Fazendo assim,
+;; (sorvete-quantidade * 100) / total
+
+(define (calcular-porcentagem sorvete total)
+  (if (zero? total)
+      0
+      (round (/ (* 100 (sorvete-quantidade sorvete)) total))))
+
+;; Exemplos de uso
+(examples
+  (check-equal? (calcular-porcentagem (sorvete "Baunilha" 10) 127) 8)
+  (check-equal? (calcular-porcentagem (sorvete "Menta" 5) 110) 5)
+  (check-equal? (calcular-porcentagem (sorvete "Chocolate" 25) 100) 25)
+  (check-equal? (calcular-porcentagem (sorvete "Morango" 0) 100) 0)
+  (check-equal? (calcular-porcentagem (sorvete "Uva" 15) 0) 0))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Análise
+;; Determinar a lógica para decidir quantas barras devem ser geradas em uma linha.
+;;
+;; Tipo de Dados
+;; Porcentagem é uma entrada
+;; - Quantidade de barras é a saída esperada
+;;
+;; Especificação
+;; Porcentagem -> NúmeroNatural
+;; Determina uma lógica para decidir a quantidade de barras que devem ser geradas para uma linha da tabela por exemplo "===" ou "=======". A lógica foi definida da
+;; seguinte maneira, ((porcentagem / 10) * 3), essa é a quantidade de barras que devem ser geradas. E deve ser arredondada usando o ceiling.
+
+(define (gerar-barra porcentagem)
+  (make-string (* (ceiling (/ porcentagem 10)) 3) #\=))
+
+;; Exemplos de uso
+(examples
+  (check-equal? (gerar-barra 0) "")
+  (check-equal? (gerar-barra 8) "===")
+  (check-equal? (gerar-barra 25) "=========")
+  (check-equal? (gerar-barra 55) "==================")
+  (check-equal? (gerar-barra 100) "=============================="))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Análise
+;; Descobrir qual é o maior tamanho de string da estrutura sorvete-tipo da tabela.
+;;
+;; Tipo de Dados
+;; Tabela é uma entrada
+;; - Maior tamanho das linhas do tipo é a saída
+;;
+;; Especificação
+;; Tabela -> NúmeroNatural
+;; Descobre qual é o maior tamanho de string das linhas da estrutura sorvete-tipo da tabela, fazendo isso recursivamente.
+
+(define (max-tam-tipo tabela)
+  (cond
+    [(empty? tabela) 0]
+    [else (max (string-length (sorvete-tipo (first tabela)))
+               (max-tam-tipo (rest tabela)))]))
+
+;; Exemplos de uso
+(examples
+  (check-equal? (max-tam-tipo empty) 0)
+  (check-equal? (max-tam-tipo (list (sorvete "Uva" 43) (sorvete "Groselha" 100) (sorvete "Limão" 40) (sorvete "Alho" 0))) 8)
+  (check-equal? (max-tam-tipo (list (sorvete "Uva" 10)(sorvete "Laranja" 20))) 7)
+  (check-equal? (max-tam-tipo (list (sorvete "Abacaxi" 5))) 7))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+; Análise
+;; Gerar uma representação visual de uma barra de gráfico, adiciona colchetes e um espaço ao redor da barra para concatenar a saída.
+;;
+;; Tipo de Dados
+;; Sorvete é uma entrada e Total é uma entrada
+;; - A saída é uma string que representa a barra formatada.
+;;
+;; Especificação
+;; Sorvete Número -> String
+;; Gera uma representação visual de uma barra de gráfico, logo recebe um sorvete e o total de sorvetes, calcula a porcentagem do sorvete em relação ao total,
+;; gerando a barra correspondente e retornando uma string concatenada que inclui a barra entre colchetes, seguida de um espaço.
+
+(define (pega-barra sorvete total)
+  (string-append " [" (gerar-barra (calcular-porcentagem sorvete total)) "] "))
+
+;; Exemplos de uso
+(examples
+  (check-equal? (pega-barra (sorvete "Uva" 43) 183) " [=========] ")
+  (check-equal? (pega-barra (sorvete "Chocolate" 15) 100) " [======] ")
+  (check-equal? (pega-barra (sorvete "Morango" 25) 100) " [=========] ")
+  (check-equal? (pega-barra (sorvete "Menta" 5) 20) " [=========] ")
+  (check-equal? (pega-barra (sorvete "Baunilha" 0) 100) " [] "))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Análise
+;; Calcular o comprimento máximo da string que representa a barra de gráfico para todos os sorvetes na tabela.
+
+;; Tipo de Dados
+;; Tabela é uma das entradas e Total é uma das entradas
+;; - Maior comprimento da string da barra é a saída esperada
+
+;; Especificação
+;; Lista<Sorvete> Número -> NúmeroNatural
+;; Para cada sorvete na tabela, gera a barra correspondente utilizando a função pega-barra e retorna o comprimento máximo da string da barra entre todos os sorvetes.
+
+(define (max-tam-barra tabela total)
+  (cond
+    [(empty? tabela) 0]
+    [else (max (string-length (pega-barra (first tabela) total))
+               (max-tam-barra (rest tabela) total))]))
+
+;; Exemplos de uso
+(examples
+  (check-equal? (max-tam-barra (list (sorvete "Uva" 43) (sorvete "Groselha" 100) (sorvete "Limão" 40) (sorvete "Alho" 0)) 183) 22)
+  (check-equal? (max-tam-barra (list (sorvete "Uva" 50) (sorvete "Laranja" 30)) 80) 25)
+  (check-equal? (max-tam-barra (list (sorvete "Abacaxi" 20)) 20) 34)
+  (check-equal? (max-tam-barra empty 100) 0))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+                                        
+;; Análise
+;; Constuir uma linha da tabela gerando um gráfico, concatenando o tipo do sorvete, espacos, a quantidade de barras, espacos da barra e a porcentagem.
+;;
+;; Tipo de Dados
+;; Sorvete é um dos valores de entrada, Total é um dos valores de entrada, Max-Tam-Tipo é um dos valores de entrada e Max-Tam-Barra é um dos valores de entrada
+;; Linha do gráfico da tabela é a saída esperada
+;;
+;; Especificação
+;; Sorvete Total Max-Tam-Tipo Max-Tam-Barra -> Linha do gráfico
+;; Constroi uma linha do gráfico a partir da tabela, total, max-tam-tipo e max-tam-barra, concatenando o tipo do sorvete, espacos do tipo, quantidade de barras,
+;; espacos da barra e porcentagem.
+
+(define (linha-grafico sorvete total max-tam-tipo max-tam-barra)
+  (define porcentagem (calcular-porcentagem sorvete total))
+  (define barra (gerar-barra porcentagem))
+  (define tipo-length (string-length (sorvete-tipo sorvete)))
+  (define tipo-espacos (make-string (max 0 (- max-tam-tipo tipo-length)) #\space))
+  (define barras-append (string-append " [" barra "] "))
+  (define barras-length (string-length barras-append))
+  (define barras-espacos (make-string (max 0 (- max-tam-barra barras-length)) #\space))
+  (string-append (sorvete-tipo sorvete)
+                 tipo-espacos
+                 barras-append
+                 barras-espacos
+                 (number->string porcentagem)
+                 "%"))
+
+;; Exemplos de uso
+(examples
+  (check-equal? (linha-grafico (sorvete "Alho" 0) 183 8 19) "Alho     []                0%")
+  (check-equal? (linha-grafico (sorvete "Menta" 100) 183 5 19) "Menta [==================] 55%")
+  (check-equal? (linha-grafico (sorvete "Chocolate" 40) 183 9 19) "Chocolate [=========]       22%")
+  (check-equal? (linha-grafico (sorvete "Morango" 0) 183 7 19) "Morango []                0%"))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Análise
+;; Processar todas as linhas da tabela a partir da função linha-grafico, fazendo imprimir recursivamente todas as linhas e seus respectivos dados.
+;;
+;; Tipo de Dados
+;; Tabela é um valor de entrada, Total é um valor de entrada, Max-Tam-Tipo é um valor de entrada e Max-Tam-Barra é um valor de entrada
+;; - Linhas do gráfico da tabela é saída esperada
+;;
+;; Especificação
+;; Tabela Total Max-Tam-Tipo Max-Tam-Barra -> Linhas do gráfico
+;; Processa todas as linhas da tabela a partir da função linha-grafico, fazendo que seja gerado recursivamente todas as linhas do gráfico com seus
+;; respectivos dados, como o tipo, maior tamanho do tipo, quantidade de barras, maior tamanho das barras e porcentagem.
+
+(define (gerar-linhas tabela total max-tam-tipo max-tam-barra)
+  (cond
+    [(empty? tabela) empty]
+    [else (cons (linha-grafico (first tabela) total max-tam-tipo max-tam-barra)
+                (gerar-linhas (rest tabela) total max-tam-tipo max-tam-barra))]))
+
+(examples
+  (check-equal? (gerar-linhas (list (sorvete "Uva" 43) (sorvete "Groselha" 100) (sorvete "Limão" 40) (sorvete "Alho" 0)) 183 8 19)
+                (list "Uva      [=========]       23%"
+                      "Groselha [==================] 55%"
+                      "Limão    [=========]       22%"
+                      "Alho     []                0%"))
+  (check-equal? (gerar-linhas (list (sorvete "Uva" 50) (sorvete "Laranja" 30)) 80 7 19)
+                (list "Uva     [=====================] 62%"
+                      "Laranja [============]    38%"))
+  (check-equal? (gerar-linhas (list (sorvete "Abacaxi" 20)) 20 7 19)
+                (list "Abacaxi [==============================] 100%"))
+  (check-equal? (gerar-linhas empty 100 0 19)
+                empty))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Análise
+;; A função calcular-max-tam-barra chama a função max-tam-barra para obter o comprimento máximo da string da barra.
+
+;; Tipo de Dados
+;; Tabela é uma entrada e Total é uma entrada
+;; - Comprimento máximo da barra é a saída esperada.
+
+;; Especificação
+;; Lista<Sorvete> Total -> NúmeroNatural
+;; Devolve o comprimento máximo da string da barra de gráfico calculado por max-tam-barra. A função calcular-max-tam-barra chama a função max-tam-barra para obter
+;; o comprimento máximo da string da barra.
+
+(define (calcular-max-tam-barra tabela total)
+  (max-tam-barra tabela total))
+
+;; Exemplos de uso
+(examples
+  (check-equal? (calcular-max-tam-barra (list (sorvete "Uva" 43) (sorvete "Groselha" 100)) 183) 22)
+  (check-equal? (calcular-max-tam-barra (list (sorvete "Uva" 50) (sorvete "Laranja" 30)) 80) 25)
+  (check-equal? (calcular-max-tam-barra (list (sorvete "Abacaxi" 20)) 20) 34)
+  (check-equal? (calcular-max-tam-barra empty 100) 0))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Análise
+;; Gerar o gráfico de barras para uma tabela de sorvetes a partir da função grafico-barras.
+;; Calcular o total de sorvetes, o maior comprimento dos tipos e o comprimento máximo das barras.
+;; Devolver uma lista de linhas do gráfico.
+
+;; Tipo de Dados
+;; Tabela é uma entrada
+;; - Lista de strings representando o gráfico de barras é a saída esperada.
+
+;; Especificação
+;; Lista<Sorvete> -> Lista<String>
+;; Retorna o gráfico de barras para a tabela de sorvetes. Se o total de sorvetes é zero, retorna uma lista vazia.
+;; Caso contrário, gera as linhas do gráfico com base no total, maior tamanho dos tipos e comprimento das barras.
+
+(define (grafico-barras tabela)
+  (define total (total-sorvetes tabela))
+  (define max-tam (max-tam-tipo tabela))
+  (define max-tam-barra (calcular-max-tam-barra tabela total))
+  (cond
+    [(zero? total) empty]
+    [else (gerar-linhas tabela total max-tam max-tam-barra)]))
+
+;; Exemplos de uso
+(examples
+  (check-equal? (grafico-barras (list (sorvete "Uva" 43) (sorvete "Groselha" 100) (sorvete "Limão" 40) (sorvete "Alho" 0)))
+                (list "Uva      [=========]          23%"
+                      "Groselha [==================] 55%"
+                      "Limão    [=========]          22%"
+                      "Alho     []                   0%"))
+  (check-equal? (grafico-barras (list (sorvete "Uva" 50) (sorvete "Laranja" 30)))
+                (list "Uva     [=====================] 62%"
+                      "Laranja [============]          38%"))
+  (check-equal? (grafico-barras (list (sorvete "Abacaxi" 20)))
+                (list "Abacaxi [==============================] 100%"))
+  (check-equal? (grafico-barras empty)
+                empty))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Função principal para executar todas as funções do programa
+(define (main)
+  (define entrada (port->lines (open-input-file "tabela.txt")))
+  (define tabela (processa-entrada entrada))
+  (define saida (grafico-barras tabela))
+  (display-lines saida))
+
+(main)

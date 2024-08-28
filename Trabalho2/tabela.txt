@@ -1,0 +1,4 @@
+Uva 60
+Groselha 100
+Limão 40
+Alho 0
