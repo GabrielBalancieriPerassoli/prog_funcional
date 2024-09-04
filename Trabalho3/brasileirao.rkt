@@ -376,18 +376,34 @@
                      (desempenho "Team Delta" 5 2 2)
                      (desempenho "Team Gamma" 5 2 1))))
 
+(define (inserir-desempenho desempenho lista-ordenada)
+  (cond
+    [(empty? lista-ordenada) (cons desempenho empty)]
+    [else
+     (cond
+       [(> (desempenho-pontos desempenho) (desempenho-pontos (first lista-ordenada))) 
+        (cons desempenho lista-ordenada)]
+       [(< (desempenho-pontos desempenho) (desempenho-pontos (first lista-ordenada))) 
+        (cons (first lista-ordenada) (inserir-desempenho desempenho (rest lista-ordenada)))]
+       [(> (desempenho-vitorias desempenho) (desempenho-vitorias (first lista-ordenada))) 
+        (cons desempenho lista-ordenada)]
+       [(< (desempenho-vitorias desempenho) (desempenho-vitorias (first lista-ordenada))) 
+        (cons (first lista-ordenada) (inserir-desempenho desempenho (rest lista-ordenada)))]
+       [(> (desempenho-saldo desempenho) (desempenho-saldo (first lista-ordenada))) 
+        (cons desempenho lista-ordenada)]
+       [(< (desempenho-saldo desempenho) (desempenho-saldo (first lista-ordenada))) 
+        (cons (first lista-ordenada) (inserir-desempenho desempenho (rest lista-ordenada)))]
+       [(string<? (string-downcase (desempenho-time desempenho))
+                  (string-downcase (desempenho-time (first lista-ordenada))))
+        (cons desempenho lista-ordenada)]
+       [else 
+        (cons (first lista-ordenada) (inserir-desempenho desempenho (rest lista-ordenada)))])]))
+
 (define (ordenar-desempenho desempenhos)
-  (sort desempenhos
-        (lambda (d1 d2)
-          (cond
-            [(> (desempenho-pontos d1) (desempenho-pontos d2)) #t]
-            [(< (desempenho-pontos d1) (desempenho-pontos d2)) #f]
-            [(> (desempenho-vitorias d1) (desempenho-vitorias d2)) #t]
-            [(< (desempenho-vitorias d1) (desempenho-vitorias d2)) #f]
-            [(> (desempenho-saldo d1) (desempenho-saldo d2)) #t]
-            [(< (desempenho-saldo d1) (desempenho-saldo d2)) #f]
-            [else (string<? (string-downcase (desempenho-time d1))
-                            (string-downcase (desempenho-time d2)))]))))
+  (cond
+    [(empty? desempenhos) empty]
+    [else (inserir-desempenho (first desempenhos) 
+                              (ordenar-desempenho (rest desempenhos)))]))
 
 ;; Análise
 ;; Determinar o maior comprimento das strings entre todos os times.
